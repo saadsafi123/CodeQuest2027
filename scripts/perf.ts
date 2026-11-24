@@ -21,7 +21,7 @@ async function step<T>(name: string, fn: () => Promise<T>): Promise<T> {
 }
 
 async function main() {
-  await resetAllData();
+  await resetAllData({ withStory: false });
   const users = await userRepository.list();
   const by = (n: string) => users.find((u) => u.name.includes(n))!;
   const ayesha = by("Ayesha");

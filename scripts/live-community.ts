@@ -28,7 +28,7 @@ async function code(p: Promise<unknown>): Promise<string> {
 }
 
 async function main() {
-  await resetAllData();
+  await resetAllData({ withStory: false });
   const users = await userRepository.list();
   const by = (n: string) => users.find((u) => u.name.startsWith(n))!;
   const [ayesha, bilal, hira, usman, sana, zain] = ["Ayesha", "Bilal", "Hira", "Usman", "Sana", "Zain"].map(by) as User[];

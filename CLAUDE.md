@@ -80,7 +80,7 @@ scripts/              check-db.ts, reset.ts, seed.ts
 npm install
 cp .env.example .env.local     # fill in values (see docs/SETUP.md)
 npm run db:check               # verifies env, connection, tables, functions; says what to fix
-npm run db:reset               # wipe + reseed demo data      (npm run db:seed seeds only)
+npm run db:reset               # wipe + reseed demo data: 12 users + a demo story of 8 issues (src/lib/db/seed.ts, built through the real services with AI_MODE=fallback). The Reset button does the same. live:community and perf reset users-only.
 npm run dev                    # http://localhost:3000
 npm run test                   # vitest (unit + scenarios)
 npm run try:extract -- "text"  # run one sentence through extraction + nets (--fallback to skip Gemini)
