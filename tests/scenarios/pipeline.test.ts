@@ -25,11 +25,11 @@ describe("the stored reason matches the real routing", () => {
     const v = await submit(a, "projector kharab hai lab mein, db lab");
     const d = await getIssueDetail(a as never, v.issue!.id);
     expect(d.reason).toMatch(/DB Lab/);
-    expect(d.reason).toMatch(/Sent to CSE/);
+    expect(d.reason).toMatch(/Routed to CSE/);
     expect(d.reason).not.toMatch(/Labs/);
     const hz = await submit(b, "EE lab 2 ke plug se chingariyan nikal rahi hain");
-    expect((await getIssueDetail(b as never, hz.issue!.id)).reason).toMatch(/Safety hazard.*Always critical.*Sent to EE/);
-    const gate = await submit(c, "main gate ka light kharab hai");
+    expect((await getIssueDetail(b as never, hz.issue!.id)).reason).toMatch(/Safety hazard.*Always critical.*Routed to EE/);
+    const gate = await submit(c, "chair broken at the main gate");
     expect((await getIssueDetail(c as never, gate.issue!.id)).reason).toMatch(/admin will assign/);
   });
 });
@@ -197,8 +197,14 @@ describe("routing to the owning department; ownerless places to the admin (D13, 
     expect(await listQueue(isStaff as never)).toEqual([]);
   });
 
-  it("Main Gate has no owner: admin queue, flagged needsDepartment, in no department queue", async () => {
+  it("a problem at an ownerless place is still routed by the AI (a broken light -> EE)", async () => {
     const v = await submit(a, "main gate ka light kharab hai");
+    expect(v.issue).toMatchObject({ department: "EE" });
+    expect((await listQueue(addStaff("EE") as never)).map((i) => i.department)).toEqual(["EE"]);
+  });
+
+  it("Main Gate has no owner AND the AI cannot tell the department: admin queue, flagged needsDepartment, in no department queue", async () => {
+    const v = await submit(a, "chair broken at the main gate");
     expect(v.issue).toMatchObject({ department: null });
     const admin = addAdmin();
     const overview = await adminOverview(admin as never);

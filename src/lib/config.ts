@@ -101,6 +101,23 @@ export const config = {
     autoRetries: 1, // immediate retries of issue creation before giving up and flagging the report
   },
 
+  /** Trending board (bonus). Score = (priority points + crowdFactor * sqrt(distinct students)) * recency; recency halves every halfLifeHours. */
+  trending: {
+    limit: 8,
+    halfLifeHours: 36,
+    priorityPoints: { low: 1, medium: 2, high: 3, critical: 4 } as Record<string, number>,
+    crowdFactor: 1.5,
+    /** A report is "rising" when it is this new and already has this many affected students. */
+    risingMaxAgeHours: 24,
+    risingMinStudents: 2,
+  },
+
+  /** AI-written admin summary (bonus). Cached so a page refresh does not call the AI every time. */
+  summary: {
+    cacheSeconds: 90,
+    topIssues: 8,
+  },
+
   /** Grouping ("me too"). */
   grouping: {
     maxCandidates: 8, // existing issues at the same place offered to the same-problem check
@@ -118,6 +135,8 @@ export const config = {
   /** Unknown-location clarification: the student may answer this many times, then it is admin-only. */
   clarification: {
     maxAnswers: 2,
+    /** Counter-questions the AI may ask about WHAT the problem is, before the report goes through as it is (no endless loop). */
+    maxFollowUps: 3,
   },
 } as const;
 

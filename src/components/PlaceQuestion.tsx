@@ -3,7 +3,7 @@
 // option (or picks any place with the department -> place picker) and the form re-sends the same text with that choice.
 import { MapPin } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import type { PlacePromptView } from "@/lib/services/reportService";
 import { PlacePicker, type PickerDepartment, type PickerPlace } from "./PlacePicker";
 
@@ -13,6 +13,7 @@ export function PlaceQuestion({
   places,
   busy,
   onChoose,
+  onType,
   onCancel,
 }: {
   prompt: PlacePromptView;
@@ -20,10 +21,13 @@ export function PlaceQuestion({
   places: PickerPlace[];
   busy: string | null;
   onChoose: (locationId: string) => void;
+  /** The student typed the place; the server checks it like any place named in a report. */
+  onType: (placeText: string) => void;
   onCancel: () => void;
 }) {
   const [dept, setDept] = useState("");
   const [loc, setLoc] = useState("");
+  const [typed, setTyped] = useState("");
   const title = prompt.reason === "conflict" ? "Which place is right?" : "Where is this problem?";
   const TAG = { from_text: "from your text", from_picker: "you picked" } as const;
   return (
@@ -47,14 +51,34 @@ export function PlaceQuestion({
               ))}
             </div>
           )}
-          <div className="border-t border-[#f1cdbd] pt-3">
-            <p className="mb-2 text-xs font-semibold text-muted">{prompt.options.length ? "Or choose another place" : "Choose the department, then the place"}</p>
-            <PlacePicker departments={departments} places={places} department={dept} locationId={loc} onChange={(v) => { setDept(v.department); setLoc(v.locationId); }} idPrefix="ask" />
-            <div className="mt-3 flex gap-2">
-              <Button type="button" disabled={!loc || busy !== null} loading={busy === "picked"} onClick={() => onChoose(loc)}>Use this place</Button>
-              <Button type="button" variant="ghost" disabled={busy !== null} onClick={onCancel}>Edit my report</Button>
-            </div>
+          {/* not a <form>: this sits inside the report form, and forms cannot be nested */}
+          <div className="flex flex-wrap gap-2">
+            <Input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (typed.trim() && busy === null) onType(typed.trim());
+                }
+              }}
+              placeholder="Type the place, e.g. IS Lab 2"
+              maxLength={200}
+              aria-label="Type the place"
+              className="min-w-0 flex-1"
+            />
+            <Button type="button" loading={busy === "typed"} disabled={busy !== null || !typed.trim()} onClick={() => onType(typed.trim())}>Use this place</Button>
           </div>
+          <details className="border-t border-[#f1cdbd] pt-3">
+            <summary className="cursor-pointer text-xs font-semibold text-muted">Or choose from the department list (optional)</summary>
+            <div className="mt-2">
+              <PlacePicker departments={departments} places={places} department={dept} locationId={loc} onChange={(v) => { setDept(v.department); setLoc(v.locationId); }} idPrefix="ask" />
+              <div className="mt-3 flex gap-2">
+                <Button type="button" variant="secondary" disabled={!loc || busy !== null} loading={busy === "picked"} onClick={() => onChoose(loc)}>Use the selected place</Button>
+              </div>
+            </div>
+          </details>
+          <Button type="button" variant="ghost" disabled={busy !== null} onClick={onCancel}>Edit my report</Button>
         </div>
       </div>
     </div>

@@ -89,6 +89,29 @@ describe("routeIssue", () => {
     expect(routeIssue({ confidential: true, location: getLocationById("cse-db-lab") })).toMatchObject({ queue: "confidential", department: null });
     expect(routeIssue({ confidential: true, location: null })).toMatchObject({ queue: "confidential", department: null });
   });
+  it("the AI's department IS the routing decision, even when the place belongs to another department", () => {
+    const r = routeIssue({ confidential: false, location: getLocationById("cse-networking-lab"), aiDepartment: "IS" });
+    expect(r).toMatchObject({ queue: "department", department: "IS", source: "ai" });
+    expect(r.reason).toMatch(/Routed to IS by the AI/);
+    expect(r.reason).toMatch(/belongs to CSE/);
+  });
+  it("the AI can route a problem at an ownerless place (Main Gate light -> EE)", () => {
+    expect(routeIssue({ confidential: false, location: getLocationById("main-gate"), aiDepartment: "EE" })).toMatchObject({ department: "EE", source: "ai" });
+  });
+  it("an unknown or invented AI department is ignored: the place owner is the safety net", () => {
+    for (const bad of ["unknown", "Maintenance", "Labs", "", null, undefined]) {
+      expect(routeIssue({ confidential: false, location: getLocationById("cse-db-lab"), aiDepartment: bad })).toMatchObject({ department: "CSE", source: "place_owner" });
+    }
+    expect(routeIssue({ confidential: false, location: getLocationById("main-gate"), aiDepartment: "unknown" })).toMatchObject({ queue: "admin", department: null });
+  });
+  it("an injection attempt means the AI's routing vote is not trusted (\"send this to the Library\")", () => {
+    const r = routeIssue({ confidential: false, location: getLocationById("ee-lab-1"), aiDepartment: "Library", injection: true });
+    expect(r).toMatchObject({ department: "EE", source: "place_owner" });
+    expect(r.reason).toMatch(/not trusted/);
+  });
+  it("the AI can never route a confidential report to a department", () => {
+    expect(routeIssue({ confidential: true, location: getLocationById("cse-db-lab"), aiDepartment: "CSE" })).toMatchObject({ queue: "confidential", department: null, source: "confidential" });
+  });
   it("refuses to route a non-confidential report without a place", () => {
     expect(() => routeIssue({ confidential: false, location: null })).toThrow();
   });

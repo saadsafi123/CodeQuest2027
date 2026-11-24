@@ -34,6 +34,10 @@ export const ExtractionSchema = z.object({
   is_harassment_or_ragging: z.boolean(),
   injection_attempt_detected: z.boolean(),
   one_line_reason: z.string().max(300),
+  /** false when the report does not say WHAT the problem is ("problem hai", "kuch masla hai"). Missing = clear. The AI decides this. */
+  problem_is_clear: z.boolean().optional(),
+  /** One short English question asking for what is missing about the problem; null when the problem is clear. */
+  follow_up_question: z.string().max(200).nullable().optional(),
 });
 
 export type Extraction = z.infer<typeof ExtractionSchema>;
@@ -60,6 +64,8 @@ export const geminiResponseSchema = {
     is_harassment_or_ragging: { type: "BOOLEAN" },
     injection_attempt_detected: { type: "BOOLEAN" },
     one_line_reason: { type: "STRING" },
+    problem_is_clear: { type: "BOOLEAN" },
+    follow_up_question: { type: "STRING", nullable: true },
   },
   required: [
     "language",
@@ -72,6 +78,8 @@ export const geminiResponseSchema = {
     "is_harassment_or_ragging",
     "injection_attempt_detected",
     "one_line_reason",
+    "problem_is_clear",
+    "follow_up_question",
   ],
 } as const;
 

@@ -271,3 +271,13 @@ The earlier instruction "visual design is not scored; keep the UI plain" (CLAUDE
 
 ## D74: Institutional UI direction (supersedes the D73 "Campus Calm" look)
 The product should read as an official university service, not a startup page: flat panels with hairlines, navy brand used sparingly, Inter + a serif only for titles, utility bar + header + collapsible sidebar + full footer, role shown once, judge tools as an edge-docked tab, "AI understands, code decides" moved to /how-decisions-are-made. Tokens live only in globals.css; contrast and literal guards are tests. UI only: no change to services, rules, permissions or API. Work is on branch `ui-redesign`; roll back with `git checkout master`.
+
+
+## D75. Routing is decided by the AI (supersedes the "place owner decides" part of D13/D28)
+**Why:** the problem statement says "AI routes each one to the right department" and the team confirmed it must be the AI, not a lookup table.
+**Rule:** the extraction's `department_guess` is the routing decision. `rules/routing.ts` validates it: it must be one of the real departments (anything else, including "unknown", "Maintenance" or "Labs", is ignored); it is NOT trusted when the report contains an injection attempt (the text may have steered it); a confidential report never gets a department. Safety net, in order: the owner of the resolved place (D13), then the admin queue (D28).
+**Place not in the text:** when the student taps, types or picks the place, the first reading never saw it, so the AI reads the report once more with the settled place and only its department answer is used (`aiDepartmentFor` in `reportService.ts`).
+**Both readers follow the same guidance:** Gemini's prompt says a lab belongs to its parent department; the rule-based reader (`fallback.ts`) now runs the real place matcher on the whole text, so it gives the same answer for "networking lab".
+**Students never choose the department.** The department -> place picker stays optional and is only a hint; the "where?" question now has a text box first and the list second. A typed place is matched only against the campus list, and text that reads like an instruction is not matched at all.
+**Recorded:** each issue's routing note stores `source` (ai / place_owner / admin / confidential) and the AI's department, so the staff and admin views can show who decided.
+

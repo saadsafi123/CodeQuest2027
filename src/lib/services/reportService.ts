@@ -14,8 +14,9 @@ import { applyAnswer, startClarification, type ClarificationState } from "@/lib/
 import { acceptVerdict, selectCandidates, type GroupableIssue } from "@/lib/rules/grouping";
 import { decideLocation, getLocationById, type LocationDecision, type LocationRef } from "@/lib/rules/location";
 import { canAnswerClarification, canSubmitReport, isAdmin } from "@/lib/rules/permissions";
-import { routeIssue } from "@/lib/rules/routing";
+import { routeIssue, type Route } from "@/lib/rules/routing";
 import { cleanHint, reconcilePlace, type OptionTag, type PlaceHint } from "@/lib/rules/placeHint";
+import { detectInjection } from "@/lib/rules/injection";
 import { sanitizeReportText } from "@/lib/rules/text";
 import { createHash } from "node:crypto";
 import { ServiceError } from "./errors";
@@ -34,9 +35,13 @@ export interface PlacePromptView {
 export interface ReportView {
   /** Empty while status is "needs_place": nothing has been saved yet. */
   id: string;
-  /** "needs_place" is not a stored status: the question is asked BEFORE the report is saved or routed. */
-  status: Report["status"] | "needs_place";
+  /** "needs_place", "needs_problem" and "needs_confirm" are not stored statuses: the question is asked BEFORE the report is saved or routed. */
+  status: Report["status"] | "needs_place" | "needs_problem" | "needs_confirm";
   placePrompt?: PlacePromptView;
+  /** "needs_problem": the AI could not tell what the problem is and asks one question. Nothing has been saved. */
+  followUp?: { question: string };
+  /** "needs_confirm": everything is clear; the student checks this summary and confirms. Nothing has been saved yet. */
+  summary?: { problem: string; place: { id: string; name: string } | null; confidential: boolean };
   confidential: boolean;
   message: string;
   location: { id: string; name: string; department: string | null } | null;
@@ -133,12 +138,17 @@ export function toReportView(report: Report, outcome?: Outcome | null): ReportVi
 }
 
 /** One-line reason shown with the issue. Built from the AUTHORITATIVE routing facts (not the AI's guess), so it never contradicts where the issue went. */
-export function explainRouting(args: { signature: string; hazardType: string | null; location: LocationRef | null; department: string | null; confidential: boolean }): string {
+export function explainRouting(args: { signature: string; hazardType: string | null; location: LocationRef | null; department: string | null; confidential: boolean; source?: Route["source"]; aiMode?: "gemini" | "fallback" }): string {
   if (args.confidential) return "Confidential report, handled by the admin only.";
   const what = args.signature.charAt(0).toUpperCase() + args.signature.slice(1);
   const where = args.location ? ` at ${args.location.name}` : "";
   const hazard = args.hazardType && args.hazardType !== "none" ? `Safety hazard (${args.hazardType})${where}. Always critical. ` : `${what}${where}. `;
-  const who = args.department ? `Sent to ${args.department}, which owns that place.` : "No department owns this place, so the admin will assign it.";
+  const by = args.aiMode === "fallback" ? "the rule-based reader" : "the AI";
+  const who = !args.department
+    ? "No department owns this place, so the admin will assign it."
+    : args.source === "ai"
+      ? `Routed to ${args.department} by ${by}.`
+      : `Sent to ${args.department}, which owns that place.`;
   return hazard + who;
 }
 
@@ -157,6 +167,24 @@ const toGroupable = (i: Issue): GroupableIssue => ({
 interface Prefetched {
   existing?: Issue[];
   reporterProfile?: Awaited<ReturnType<typeof userRepository.trustProfiles>>;
+}
+
+/**
+ * The AI's routing decision. When the place was NOT in the text (the student tapped, typed or picked it, or the admin
+ * assigned it) the first reading never saw the place, so the AI reads the report once more WITH the settled place and
+ * only its department answer is used. A failure here just keeps the first reading (routeIssue's safety net applies).
+ */
+async function aiDepartmentFor(report: Report, ex: Extraction, location: LocationRef | null): Promise<{ department: string; injection: boolean; mode: "gemini" | "fallback" }> {
+  const first = { department: ex.department_guess as string, injection: ex.injection_attempt_detected, mode: (report.aiMode === "gemini" ? "gemini" : "fallback") as "gemini" | "fallback" };
+  const src = (report.flags.location as { source?: string } | undefined)?.source;
+  if (!location || src === "text") return first;
+  try {
+    const a = await analyzeCached(`${report.rawText}
+Place: ${location.name}.`);
+    return { department: a.extraction.department_guess, injection: first.injection || a.extraction.injection_attempt_detected, mode: a.mode };
+  } catch {
+    return first;
+  }
 }
 
 /**
@@ -203,7 +231,9 @@ async function completeReport(report: Report, location: LocationRef | null, pre:
     return { issue, joinedExisting: true, alreadyCounted: !r.joined };
   }
 
-  const route = routeIssue({ confidential, location });
+  // The DEPARTMENT is the AI's decision (validated by routeIssue); code keeps confidentiality, the place check and the safety net.
+  const ai = confidential ? null : await aiDepartmentFor(report, ex, location);
+  const route = routeIssue({ confidential, location, aiDepartment: ai?.department, injection: ai?.injection ?? ex.injection_attempt_detected, aiMode: ai?.mode ?? "fallback" });
   const members = weightsFromProfiles([report.userId], pre.reporterProfile ?? (await userRepository.trustProfiles([report.userId])));
   const p = computePriority({ category: ex.problem_category, hazard, members });
   const input = {
@@ -213,9 +243,9 @@ async function completeReport(report: Report, location: LocationRef | null, pre:
     department: route.department,
     priority: p.tier,
     priorityScore: p.score,
-    priorityBreakdown: { ...(p.breakdown as unknown as Record<string, unknown>), routing: { queue: route.queue, reason: route.reason } },
+    priorityBreakdown: { ...(p.breakdown as unknown as Record<string, unknown>), routing: { queue: route.queue, source: route.source, aiDepartment: ai?.department ?? null, reason: route.reason } },
     isConfidential: confidential,
-    oneLineReason: explainRouting({ signature: ex.problem_signature, hazardType: hazard.isHazard ? hazard.type : null, location, department: route.department, confidential }),
+    oneLineReason: explainRouting({ signature: ex.problem_signature, hazardType: hazard.isHazard ? hazard.type : null, location, department: route.department, confidential, source: route.source, aiMode: ai?.mode ?? "fallback" }),
   };
   const id = await issueRepository.attachNew(report.id, input);
   const now = new Date().toISOString();
@@ -278,11 +308,34 @@ function resolvedDecision(location: LocationRef, mention: string | null): Locati
   return { status: "resolved", location, reason: null, mention, question: null, suggestions: [] };
 }
 
+function followUpView(question: string): ReportView {
+  return { id: "", status: "needs_problem", confidential: false, message: question, location: null, clarification: null, issue: null, followUp: { question } };
+}
+
+function confirmView(args: { problem: string; place: LocationRef | null; confidential: boolean }): ReportView {
+  return {
+    id: "",
+    status: "needs_confirm",
+    confidential: args.confidential,
+    message: args.confidential ? "This will be handled confidentially. Send it?" : "Is this right? If yes, send it.",
+    location: args.place ? ref(args.place) : null,
+    clarification: null,
+    issue: null,
+    summary: { problem: args.problem, place: args.place ? { id: args.place.id, name: args.place.name } : null, confidential: args.confidential },
+  };
+}
+
 export interface SubmitOptions {
+  /** Check only: ask the counter-questions and show the summary, but do NOT save or route anything. */
+  dryRun?: boolean;
+  /** How many counter-questions the student has already answered for this report (bounds the "what is the problem?" loop). */
+  followUpAnswers?: number;
   /** The optional department -> place picker. Only a hint (see rules/placeHint.ts). */
   hint?: PlaceHint | null;
   /** The student's explicit answer to a "where?" question (a place id). */
   choice?: string | null;
+  /** The student TYPED the place in answer to a "where?" question. Checked like any place in a report (never guessed). */
+  placeText?: string | null;
 }
 
 /** Submit a new report (students only). May answer with a question (status "needs_place") instead of saving. */
@@ -301,12 +354,33 @@ export async function ingestReport(user: User | null, rawText: string, opts: Sub
   // Only the report text goes to the AI: no user id, name or trust (hard rule).
   const analysis: AnalyzedReport = await analyzeCached(text);
   const confidential = analysis.flags.confidential;
+  // Counter-question 1: does the report say WHAT the problem is? The AI decides (problem_is_clear); a safety hazard or a
+  // confidential report is never held back by it.
+  if (!confidential && !analysis.flags.safetyHazard && analysis.extraction.problem_is_clear === false && (opts.followUpAnswers ?? 0) < config.clarification.maxFollowUps) {
+    return followUpView(analysis.extraction.follow_up_question?.trim() || "What is the problem? For example: WiFi not working, AC not cooling, a broken projector.");
+  }
   let decision: LocationDecision = decideLocation(analysis.extraction.raw_location_mention, text, { confidential });
   let placeSource: "text" | "picker" | "choice" | null = decision.status === "resolved" ? "text" : null;
 
   // The picker is a hint and the student's tap is an answer; neither applies to a confidential report (no place needed).
   if (!confidential) {
-    if (opts.choice) {
+    const typed = opts.placeText ? sanitizeReportText(opts.placeText, 200) : "";
+    if (typed && !opts.choice) {
+      // A place name is not an instruction: anything that reads like one is never matched, so it cannot steer the place.
+      const t = detectInjection(typed).detected ? null : decideLocation(typed, typed, { confidential: false });
+      if (!t) {
+        return placePromptView({ reason: "no_place", question: "Please type just the name of the place, for example IS Lab 2.", options: [] });
+      }
+      if (t.status !== "resolved" || !t.location) {
+        return placePromptView({
+          reason: t.reason === "no_location" ? "no_place" : "unknown_with_hint",
+          question: t.question ?? `I couldn't find "${typed.slice(0, config.location.maxMentionChars)}" on campus. Please check the name or pick from the list.`,
+          options: t.suggestions.slice(0, config.location.maxSuggestions).map((l) => ({ id: l.id, name: l.name, owner: l.owner })),
+        });
+      }
+      decision = resolvedDecision(t.location, typed);
+      placeSource = "choice";
+    } else if (opts.choice) {
       const picked = getLocationById(opts.choice);
       if (!picked) throw new ServiceError("bad_request", "That place was not found.");
       decision = resolvedDecision(picked, decision.mention);
@@ -319,6 +393,19 @@ export async function ingestReport(user: User | null, rawText: string, opts: Sub
         placeSource = r.source;
       }
     }
+  }
+
+  if (opts.dryRun) {
+    if (confidential) return confirmView({ problem: "", place: null, confidential: true });
+    if (decision.status !== "resolved" || !decision.location) {
+      // Counter-question 2: where? (never guessed; the student may type it or pick from the options)
+      return placePromptView({
+        reason: decision.reason === "no_location" ? "no_place" : "unknown_with_hint",
+        question: decision.question ?? "Where is this problem?",
+        options: decision.suggestions.slice(0, config.location.maxSuggestions).map((l) => ({ id: l.id, name: l.name, owner: l.owner })),
+      });
+    }
+    return confirmView({ problem: (analysis.extraction.problem_signature || analysis.extraction.normalized_text_en).replace(/^./, (c) => c.toUpperCase()), place: decision.location, confidential: false });
   }
 
   const clarification = decision.status === "needs_clarification" ? startClarification(decision) : null;

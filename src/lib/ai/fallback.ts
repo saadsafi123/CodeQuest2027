@@ -4,6 +4,7 @@
 // Location is only *extracted as a mention* here; validation against the gazetteer is a later step.
 import { stripInjectedClauses } from "@/lib/rules/injection";
 import { detectInjection } from "@/lib/rules/injection";
+import { decideLocation } from "@/lib/rules/location";
 import { detectHarassment, detectSafetyHazard, type HazardType } from "@/lib/rules/safety";
 import { hasToken, normalizeText, tokenMatches, tokenize } from "@/lib/rules/text";
 import type { Extraction } from "./schema";
@@ -168,7 +169,10 @@ export function extractLocationMention(rawText: string): string | null {
   return candidates[0].slice(0, 200);
 }
 
-function ownerFromLocation(mention: string | null, tokens: string[]): Dept {
+function ownerFromLocation(mention: string | null, tokens: string[], text: string): Dept {
+  // Same reading as the AI prompt gives Gemini: the place named in the text decides, and a lab belongs to its parent department.
+  const placed = decideLocation(mention, text, { confidential: false });
+  if (placed.status === "resolved" && placed.location?.owner) return placed.location.owner;
   const loc = mention ?? "";
   if (/\b(library|reading (hall|room))\b/.test(loc) || tokens.includes("library") || tokens.includes("lib")) return "Library";
   if (/\b(cafeteria|canteen|cafe|mess|food court)\b/.test(loc) || tokens.includes("cafeteria") || tokens.includes("canteen")) return "Cafeteria";
@@ -223,7 +227,7 @@ export function extractWithRules(rawText: string): Extraction {
   // department: owner of the place first, then the object's default. Harassment is never routed by a guess.
   let dept: Dept = "unknown";
   if (!harass.confidential) {
-    const owner = ownerFromLocation(mention, tokens);
+    const owner = ownerFromLocation(mention, tokens, stripInjectedClauses(rawText));
     if (owner !== "unknown") dept = owner;
     else dept = obj?.dept ?? "unknown";
   }
@@ -275,6 +279,9 @@ export function extractWithRules(rawText: string): Extraction {
     is_harassment_or_ragging: harass.confidential,
     injection_attempt_detected: injection.detected,
     one_line_reason: reason.slice(0, 300),
+    // the offline reader only knows a problem it can name; anything it files as "general problem" is unclear
+    problem_is_clear: signature !== "general problem" || hazardType !== null || harass.confidential,
+    follow_up_question: signature !== "general problem" || hazardType !== null || harass.confidential ? null : "What is the problem? For example: WiFi not working, AC not cooling, a broken projector.",
   };
 }
 

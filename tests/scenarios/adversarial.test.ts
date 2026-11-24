@@ -232,7 +232,7 @@ describe("empty, huge and odd input never crashes the pipeline (#19)", () => {
     for (const t of odd) {
       const v = await submit(s, t).catch((e) => ({ error: e.code as string }));
       if ("error" in v) expect(v.error).toBe("bad_request");
-      else expect(v.status === "needs_place" || v.status === "needs_clarification" || v.status === "routed" || v.status === "grouped" || v.status === "received").toBe(true);
+      else expect(v.status === "needs_problem" || v.status === "needs_place" || v.status === "needs_clarification" || v.status === "routed" || v.status === "grouped" || v.status === "received").toBe(true);
     }
     for (const r of db.reports.values()) expect(r.rawText.length).toBeLessThanOrEqual(2000);
   });
