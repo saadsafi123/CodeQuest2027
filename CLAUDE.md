@@ -21,11 +21,12 @@ Source of truth: `docs/CodeQuest_26_Hackathon Problem Stmt.pdf`. UI/UX quality m
 9. Crowd matters: many credible students => higher importance; one high-trust student cannot push a minor issue to the top alone.
 
 Judge access (mandatory): one-click user switching with no passwords, instant creation of a new student account, and a Reset All Data button (which reseeds demo data).
-Bonus (deferred until everything else is finished and verified; do NOT start unless asked): trending board, AI-written admin summary, spam/brigading detection.
+Bonus: **built** = trending board (`/trending`, `rules/trending.ts`, `services/trendingService.ts`, any signed-in role, non-confidential only) and AI-written admin summary (`ai/summary.ts`, `services/summaryService.ts`, `components/AdminSummary.tsx` on `/admin`; the AI only writes wording from aggregated facts, falls back to a rule-based briefing, confidential reports are only a count). **Not built (only on request):** spam/brigading detection (only the passive new-account weight cap exists).
 
 ## Confirmed product decisions (details and reasons: docs/DECISIONS.md D13-D21)
 - **Config:** every tunable number lives in `src/lib/config.ts`, nowhere else.
-- **Ownership:** a room belongs to the department that owns it (CSE Lab 3 -> CSE). Every lab belongs to its parent department (EE labs -> EE, SC/DB/Networking labs -> CSE, IS labs -> IS). Library and Cafeteria own their spaces. No Maintenance dept: faults go to the owning department.
+- **Routing is decided by the AI (D75):** the problem statement says "AI routes each one to the right department". `department_guess` from the extraction IS the routing decision; `rules/routing.ts` only validates it (must be a real department; ignored when the report contains an injection attempt; confidential never gets one) and falls back to the place owner, then to the admin queue. Students are never required to pick a department: the optional department -> place picker is only a hint, and the "where?" question lets them just type the place.
+- **Ownership (guidance the AI is given, and the safety net):** a room belongs to the department that owns it (CSE Lab 3 -> CSE). Every lab belongs to its parent department (EE labs -> EE, SC/DB/Networking labs -> CSE, IS labs -> IS). Library and Cafeteria own their spaces. No Maintenance dept: faults go to the owning department.
 - **Priority tiers:** critical / high / medium / low. Any safety hazard is forced to critical. Only code sets priority.
 - **Affected students** = reporters + joiners. Joining stays open after resolution; only people who joined can vote.
 - **Reopen:** trust-weighted dispute weight >= 50% of total weighted votes cast AND >= 2 distinct disputers (1 if the issue has a single affected member). Reporter and joiner votes weigh the same.
@@ -42,13 +43,13 @@ Bonus (deferred until everything else is finished and verified; do NOT start unl
 - **Gazetteer:** `src/data/campus.json` is all placeholder. The team will supply the real lab and classroom names per department (EE, CSE, IS; Library and Cafeteria own their spaces). Until then keep the existing entries.
 - **"Labs" vs the problem statement:** the PDF lists Labs as a department; we deliberately do not (D13): labs and classrooms belong to their parent department. Say this in the pitch.
 - **Not yet verified:** a fresh run of `npm test`, `npm run db:check`, `npm run live:community`, and unseen Roman Urdu / typo sentences in both Gemini and `--fallback` mode (fallback grouping on unfamiliar wording is the likeliest weak spot).
-- **Bonus:** deferred (see above).
+- **Bonus:** trending board and AI admin summary are built; spam/brigading detection is still open (see above).
 
 ## Architecture principle: AI understands, code decides
 - AI (Gemini, `src/lib/ai`) only turns text into structured fields (language, normalized English, department guess, raw location mention, category, signature, safety/harassment/injection flags, one-line reason) and answers "same problem?". Output is validated with zod; blocked/empty/invalid output is a failure.
 - Deterministic code (`src/lib/rules`) decides everything else: location validity, safety net, priority, grouping, voting, trust, confidentiality, permissions.
 - If AI is unavailable (no keys, all keys failing, `AI_MODE=fallback`) the rule-based extractor in `src/lib/ai/fallback.ts` runs, and the mode ("fallback") is surfaced.
-- Pipeline: sanitize -> AI extract via key pool (or fallback) -> safety/injection nets -> location validation -> grouping -> priority -> routing.
+- Pipeline: sanitize -> AI extract via key pool (or fallback) -> safety/injection nets -> location validation -> grouping -> priority -> routing (AI's department, validated by code; if the student supplied the place, the AI reads the report once more with the place before deciding).
 
 ## Folder map
 ```

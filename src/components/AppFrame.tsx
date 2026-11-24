@@ -3,7 +3,7 @@
 // utility bar, header (university name, notifications, account menu), a collapsible sidebar (a drawer on phones) and the
 // footer. The role is shown ONCE, in the account menu. The judge tools are an edge-docked tab. Presentation only: which
 // pages a role may open is decided on the server (requireRole), never here.
-import { BookOpen, Bell, ChevronsLeft, ChevronsRight, ClipboardList, FilePlus2, LayoutDashboard, ListChecks, Lock, Menu, ShieldCheck, Users, X } from "lucide-react";
+import { BookOpen, Bell, ChevronsLeft, ChevronsRight, ClipboardList, FilePlus2, LayoutDashboard, ListChecks, Lock, Menu, ShieldCheck, TrendingUp, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -39,19 +39,20 @@ function navFor(user: FrameUser): NavGroup[] {
   const i = "size-[18px] shrink-0";
   const notif = { href: "/notifications", label: "Notifications", icon: <Bell className={i} aria-hidden /> };
   const help = { href: "/help", label: "Help", icon: <BookOpen className={i} aria-hidden /> };
+  const trending = { href: "/trending", label: "Trending", icon: <TrendingUp className={i} aria-hidden /> };
   if (user.role === "student")
     return [
-      { title: "Issues", items: [{ href: "/student", label: "My issues", icon: <ListChecks className={i} aria-hidden /> }, { href: "/student/new-report", label: "Report an issue", icon: <FilePlus2 className={i} aria-hidden /> }] },
+      { title: "Issues", items: [{ href: "/student", label: "My issues", icon: <ListChecks className={i} aria-hidden /> }, { href: "/student/new-report", label: "Report an issue", icon: <FilePlus2 className={i} aria-hidden /> }, trending] },
       { title: "Account", items: [{ href: "/student/trust", label: "My trust", icon: <ShieldCheck className={i} aria-hidden /> }, notif] },
       { title: "Support", items: [help] },
     ];
   if (user.role === "staff")
     return [
-      { title: "Work", items: [{ href: "/staff", label: "Issue queue", icon: <ClipboardList className={i} aria-hidden /> }, notif] },
+      { title: "Work", items: [{ href: "/staff", label: "Issue queue", icon: <ClipboardList className={i} aria-hidden /> }, trending, notif] },
       { title: "Support", items: [help] },
     ];
   return [
-    { title: "Oversight", items: [{ href: "/admin", label: "Overview", icon: <LayoutDashboard className={i} aria-hidden /> }, { href: "/admin/confidential", label: "Confidential", icon: <Lock className={i} aria-hidden /> }] },
+    { title: "Oversight", items: [{ href: "/admin", label: "Overview", icon: <LayoutDashboard className={i} aria-hidden /> }, { href: "/admin/confidential", label: "Confidential", icon: <Lock className={i} aria-hidden /> }, trending] },
     { title: "People", items: [{ href: "/admin/trust", label: "Trust scores", icon: <Users className={i} aria-hidden /> }, notif] },
     { title: "Support", items: [help] },
   ];

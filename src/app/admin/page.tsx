@@ -2,6 +2,7 @@
 // reports that need the admin. Confidential reports live on their own page and are only COUNTED here.
 import { Building, Flame, HelpCircle, ListChecks, Lock, PlayCircle } from "lucide-react";
 import Link from "next/link";
+import { AdminSummary } from "@/components/AdminSummary";
 import { AssignPlace } from "@/components/AssignPlace";
 import { IssueQueue } from "@/components/IssueQueue";
 import { LiveRefresh } from "@/components/LiveRefresh";
@@ -37,6 +38,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <StatTile label="Confidential" value={o.stats.confidential} icon={<Lock className="size-4" aria-hidden />} hint="open the queue" info={<InfoTip term="confidential" align="end" />} />
         </Link>
       </div>
+
+      <AdminSummary />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

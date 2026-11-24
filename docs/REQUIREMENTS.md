@@ -28,8 +28,8 @@ Source: `CodeQuest_26_Hackathon Problem Stmt.pdf` (in this folder). Status legen
 - [ ] J3 Reset all data (reseeds demo data).
 
 ## Bonus (only if time)
-- [ ] B1 Trending board.
-- [ ] B2 AI-written admin summary.
+- [x] B1 Trending board (`/trending`; ranked by priority + distinct affected students + recency; `rules/trending.ts`).
+- [x] B2 AI-written admin summary (admin overview card; AI writes wording only, rule-based fallback; `ai/summary.ts`).
 - [ ] B3 Spam and brigading detection (e.g., many brand-new accounts voting together).
 
 ## Organizer advice (design guidance)
