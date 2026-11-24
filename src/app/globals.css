@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/*
+  ReportFix design tokens: "Institutional, quiet, trustworthy".
+  THIS FILE IS THE ONLY PLACE WITH COLOUR VALUES. Components use the semantic names below (bg-surface, text-muted,
+  bg-brand, text-priority-critical-fg ...). tests/unit/contrast.test.ts parses this file and fails if any text/background
+  pair drops under WCAG AA (4.5:1 text, 3:1 for controls and focus).
+*/
+:root {
+  /* brand: used for about 10% of the screen (header bar, primary buttons, links, active navigation) */
+  --brand: #12355B;
+  --brand-hover: #0E2A49;
+  --brand-subtle: #E8EEF5;
+  --on-brand: #FFFFFF;
+  /* surfaces and text */
+  --page: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-sunken: #EEF1F5;
+  --border: #DDE3EA; /* decorative hairline (exempt from the 3:1 rule) */
+  --border-control: #7B8794; /* borders of inputs and other controls: >= 3:1 on surface */
+  --text: #1B2430;
+  --text-muted: #5A6675;
+  --accent: #8A5A00;
+  --focus: #12355B;
+
+  /* priority (semantic, separate from brand) */
+  --priority-critical-fg: #9B1C1C; --priority-critical-bg: #FDEDED; --priority-critical-border: #E8A5A5;
+  --priority-high-fg: #9A3412;     --priority-high-bg: #FFF1E6;     --priority-high-border: #EDB98D;
+  --priority-medium-fg: #1D4F91;   --priority-medium-bg: #EAF2FB;   --priority-medium-border: #A9C6E6;
+  --priority-low-fg: #4B5563;      --priority-low-bg: #F1F3F5;      --priority-low-border: #C9D0D8;
+
+  /* status */
+  --status-open-fg: #1D4F91;       --status-open-bg: #EAF2FB;       --status-open-border: #A9C6E6;
+  --status-progress-fg: #7A4B00;   --status-progress-bg: #FFF6DD;   --status-progress-border: #E3C877;
+  --status-resolved-fg: #166534;   --status-resolved-bg: #E9F7EE;   --status-resolved-border: #9AD3AD;
+  --status-confirmed-fg: #FFFFFF;  --status-confirmed-bg: #166534;  --status-confirmed-border: #166534;
+  --status-reopened-fg: #6B2C91;   --status-reopened-bg: #F4ECFA;   --status-reopened-border: #CDAEE3;
+  --status-clarify-fg: #7A4B00;    --status-clarify-bg: #FDF6E3;    --status-clarify-border: #E3C877;
+  --status-closed-fg: #4B5563;     --status-closed-bg: #F1F3F5;     --status-closed-border: #C9D0D8;
+
+  /* decoration helpers that are not text/background pairs */
+  --scrim: rgb(27 36 48 / 0.45);
+}
+
+@theme inline {
+  /* semantic names (use these) */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-on-brand: var(--on-brand);
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-line: var(--border);
+  --color-control: var(--border-control);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-focus: var(--focus);
+  --color-scrim: var(--scrim);
+
+  --color-priority-critical-fg: var(--priority-critical-fg); --color-priority-critical-bg: var(--priority-critical-bg); --color-priority-critical-border: var(--priority-critical-border);
+  --color-priority-high-fg: var(--priority-high-fg); --color-priority-high-bg: var(--priority-high-bg); --color-priority-high-border: var(--priority-high-border);
+  --color-priority-medium-fg: var(--priority-medium-fg); --color-priority-medium-bg: var(--priority-medium-bg); --color-priority-medium-border: var(--priority-medium-border);
+  --color-priority-low-fg: var(--priority-low-fg); --color-priority-low-bg: var(--priority-low-bg); --color-priority-low-border: var(--priority-low-border);
+  --color-status-open-fg: var(--status-open-fg); --color-status-open-bg: var(--status-open-bg); --color-status-open-border: var(--status-open-border);
+  --color-status-progress-fg: var(--status-progress-fg); --color-status-progress-bg: var(--status-progress-bg); --color-status-progress-border: var(--status-progress-border);
+  --color-status-resolved-fg: var(--status-resolved-fg); --color-status-resolved-bg: var(--status-resolved-bg); --color-status-resolved-border: var(--status-resolved-border);
+  --color-status-confirmed-fg: var(--status-confirmed-fg); --color-status-confirmed-bg: var(--status-confirmed-bg); --color-status-confirmed-border: var(--status-confirmed-border);
+  --color-status-reopened-fg: var(--status-reopened-fg); --color-status-reopened-bg: var(--status-reopened-bg); --color-status-reopened-border: var(--status-reopened-border);
+  --color-status-clarify-fg: var(--status-clarify-fg); --color-status-clarify-bg: var(--status-clarify-bg); --color-status-clarify-border: var(--status-clarify-border);
+  --color-status-closed-fg: var(--status-closed-fg); --color-status-closed-bg: var(--status-closed-bg); --color-status-closed-border: var(--status-closed-border);
+
+  /* TEMPORARY legacy aliases so pages that are not migrated yet stay legible on the new palette. Removed in the final step. */
+  --color-paper: var(--page);
+  --color-ink-soft: var(--text);
+  --color-line-strong: var(--border-control);
+  --color-brand-50: var(--brand-subtle); --color-brand-100: var(--brand-subtle); --color-brand-200: var(--border);
+  --color-brand-300: var(--border-control); --color-brand-400: var(--brand); --color-brand-500: var(--brand);
+  --color-brand-600: var(--brand); --color-brand-700: var(--brand-hover); --color-brand-900: var(--brand-hover);
+  --color-accent-50: var(--status-clarify-bg); --color-accent-100: var(--status-clarify-border); --color-accent-500: var(--accent); --color-accent-600: var(--accent);
+  --color-danger-50: var(--priority-critical-bg); --color-danger-100: var(--priority-critical-border); --color-danger-600: var(--priority-critical-fg);
+  --color-warn-50: var(--status-progress-bg); --color-warn-100: var(--status-progress-border); --color-warn-600: var(--status-progress-fg);
+  --color-ok-50: var(--status-resolved-bg); --color-ok-100: var(--status-resolved-border); --color-ok-600: var(--status-resolved-fg);
+  --color-info-50: var(--status-open-bg); --color-info-100: var(--status-open-border); --color-info-600: var(--status-open-fg);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-display: var(--font-source-serif), Georgia, "Times New Roman", serif;
+
+  /* flat and precise: small radii, hairlines, shadow only for menus / modals / sticky bars */
+  --radius-card: 8px;
+  --radius-ctl: 6px;
+  --radius-hero: 8px;
+  --shadow-card: none;
+  --shadow-soft: none;
+  --shadow-lift: none;
+  --shadow-pop: 0 8px 24px rgb(27 36 48 / 0.14);
+
+  /* type scale: 12 / 14 / 16 / 20 / 24 / 32 */
+  --text-xs: 0.75rem;   --text-xs--line-height: 1.4;
+  --text-sm: 0.875rem;  --text-sm--line-height: 1.5;
+  --text-base: 1rem;    --text-base--line-height: 1.55;
+  --text-lg: 1.25rem;   --text-lg--line-height: 1.4;
+  --text-xl: 1.5rem;    --text-xl--line-height: 1.3;
+  --text-2xl: 2rem;     --text-2xl--line-height: 1.2;
+  --text-3xl: 2rem;     --text-3xl--line-height: 1.2;
+  --text-4xl: 2rem;     --text-4xl--line-height: 1.2;
+}
+
+@layer base {
+  html { background: var(--page); color: var(--text); -webkit-text-size-adjust: 100%; font-size: 16px; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    letter-spacing: normal;
+    word-spacing: normal;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: var(--page);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* serif ONLY for page titles (h1) and the university name; everything else is sans */
+  h1 { font-family: var(--font-serif); font-size: 2rem; line-height: 1.2; font-weight: 600; color: var(--text); }
+  h2, h3, h4 { font-family: var(--font-sans); font-weight: 600; color: var(--text); }
+  h2 { font-size: 1.25rem; line-height: 1.4; }
+  h3 { font-size: 1rem; line-height: 1.5; }
+  a { text-underline-offset: 3px; }
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection { background: var(--brand-subtle); color: var(--text); }
+}
+
+/* --- motion: subtle (150-200 ms), respects prefers-reduced-motion --- */
+@keyframes rf-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes rf-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rf-pop-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes rf-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.rf-toast-in { animation: rf-toast-in 0.18s ease-out; }
+.rf-fade-in { animation: rf-fade-in 0.18s ease-out; }
+.rf-pop-in { animation: rf-pop-in 0.16s ease-out both; }
+.rf-skeleton {
+  background: linear-gradient(90deg, var(--surface-sunken) 25%, var(--page) 50%, var(--surface-sunken) 75%);
+  background-size: 200% 100%;
+  animation: rf-shimmer 1.6s linear infinite;
+}
+.rf-press:active { transform: scale(0.99); }
+
+/* --- legacy helpers still referenced by pages that are not migrated yet (flat now: no gradients, no decorative motion) --- */
+.rf-hero-bg { background: var(--brand); }
+.rf-soft-bg { background: var(--page); }
+.rf-dots { background: none; }
+.rf-lift { transition: border-color 0.16s ease; }
+.rf-lift:hover { transform: none; box-shadow: none; }
+.rf-rise, .rf-rise-1, .rf-rise-2, .rf-rise-3, .rf-rise-4, .rf-float, .rf-pulse-danger { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
