@@ -1,0 +1,212 @@
+{
+  "_README": "Campus gazetteer. Every entry has source: 'real' (given by the team) or 'placeholder' (INVENTED, replace with real names). owner = department that owns the place (children inherit the parent's owner). Aliases / roman_urdu are alternative ways students write the place; typo tolerance is applied by code, so only add genuinely different spellings here. Do NOT add ambiguous unqualified aliases such as 'lab 1' or 'ee lab': the code asks for clarification when a mention matches several places.",
+  "_REAL_ENTRIES": ["EE Lab 1", "EE Lab 2", "SC Lab", "DB Lab", "Networking Lab", "IS Lab 1", "IS Lab 2"],
+  "_NOTE_CSE_LABS": "The team wrote these three as 'SE' labs. Mapped to department CSE because the brief's department list has CSE and no SE. CONFIRM. The expansion of 'SC' is unknown, so the name is kept exactly as 'SC Lab'.",
+  "_NOTE_LABS": "There is no separate Labs department: every lab is a child of its parent department and inherits its owner (see src/data/departments.json).",
+  "version": 1,
+  "locations": [
+    {
+      "id": "cse-block",
+      "name": "CSE Block",
+      "type": "building",
+      "owner": "CSE",
+      "source": "placeholder",
+      "aliases": ["cs block", "cse building", "computer science block", "cse department"],
+      "roman_urdu": ["cse block mein", "cs block ke andar"],
+      "children": [
+        {
+          "id": "cse-sc-lab",
+          "name": "SC Lab",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["sc lab", "s c lab", "sc laboratory", "cse sc lab", "scl"],
+          "roman_urdu": ["sc lab mein", "sc wali lab", "sc ki lab"]
+        },
+        {
+          "id": "cse-db-lab",
+          "name": "DB Lab",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["db lab", "database lab", "databases lab", "data base lab", "dbms lab", "databse lab", "cse db lab", "dbl"],
+          "roman_urdu": ["db lab mein", "database wali lab", "db wali lab", "database ki lab"]
+        },
+        {
+          "id": "cse-networking-lab",
+          "name": "Networking Lab",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["networking lab", "network lab", "networks lab", "net lab", "cn lab", "computer networks lab", "computer networking lab", "networkng lab", "netwroking lab", "cse networking lab"],
+          "roman_urdu": ["networking lab mein", "network wali lab", "net wali lab", "networking ki lab"]
+        },
+        {
+          "id": "cse-room-101",
+          "name": "CSE Room 101",
+          "type": "classroom",
+          "floor": 1,
+          "source": "placeholder",
+          "aliases": ["cse room 101", "room 101", "r101", "class 101", "classroom 101"],
+          "roman_urdu": ["kamra 101", "class room 101"]
+        },
+        {
+          "id": "cse-room-201",
+          "name": "CSE Room 201",
+          "type": "classroom",
+          "floor": 2,
+          "source": "placeholder",
+          "aliases": ["cse room 201", "room 201", "r201", "class 201", "classroom 201"],
+          "roman_urdu": ["kamra 201"]
+        }
+      ]
+    },
+    {
+      "id": "ee-block",
+      "name": "EE Block",
+      "type": "building",
+      "owner": "EE",
+      "source": "placeholder",
+      "aliases": ["electrical block", "ee building", "electrical department", "ee department"],
+      "roman_urdu": ["ee block mein", "electrical block ke andar"],
+      "children": [
+        {
+          "id": "ee-lab-1",
+          "name": "EE Lab 1",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["ee lab 1", "ee lab1", "ee lab one", "electrical lab 1", "ee 1 lab", "ee lb 1"],
+          "roman_urdu": ["ee lab ek", "ee ki pehli lab", "electrical lab ek"]
+        },
+        {
+          "id": "ee-lab-2",
+          "name": "EE Lab 2",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["ee lab 2", "ee lab2", "ee lab two", "electrical lab 2", "ee 2 lab", "ee lb 2"],
+          "roman_urdu": ["ee lab do", "ee ki dosri lab", "electrical lab do"]
+        },
+        {
+          "id": "ee-room-102",
+          "name": "EE Room 102",
+          "type": "classroom",
+          "floor": 1,
+          "source": "placeholder",
+          "aliases": ["ee room 102", "room 102", "r102", "class 102", "classroom 102"],
+          "roman_urdu": ["kamra 102"]
+        }
+      ]
+    },
+    {
+      "id": "is-block",
+      "name": "IS Block",
+      "type": "building",
+      "owner": "IS",
+      "source": "placeholder",
+      "aliases": ["it block", "information systems block", "is building", "is department"],
+      "roman_urdu": ["is block mein", "it block ke andar"],
+      "children": [
+        {
+          "id": "is-lab-1",
+          "name": "IS Lab 1",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["is lab 1", "is lab1", "is lab one", "it lab 1", "it lab1", "information systems lab 1", "is 1 lab", "is lb 1"],
+          "roman_urdu": ["is lab ek", "is ki pehli lab", "it lab ek"]
+        },
+        {
+          "id": "is-lab-2",
+          "name": "IS Lab 2",
+          "type": "lab",
+          "source": "real",
+          "aliases": ["is lab 2", "is lab2", "is lab two", "it lab 2", "it lab2", "information systems lab 2", "is 2 lab", "is lb 2"],
+          "roman_urdu": ["is lab do", "is ki dosri lab", "it lab do"]
+        },
+        {
+          "id": "is-server-room",
+          "name": "IS Server Room",
+          "type": "room",
+          "floor": 0,
+          "source": "placeholder",
+          "aliases": ["server room", "network room", "is server room"],
+          "roman_urdu": ["server wala kamra"]
+        },
+        {
+          "id": "is-room-301",
+          "name": "IS Room 301",
+          "type": "classroom",
+          "floor": 3,
+          "source": "placeholder",
+          "aliases": ["is room 301", "room 301", "r301", "class 301", "classroom 301"],
+          "roman_urdu": ["kamra 301"]
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "name": "Library",
+      "type": "building",
+      "owner": "Library",
+      "source": "placeholder",
+      "aliases": ["main library", "central library", "lib", "libary"],
+      "roman_urdu": ["library mein", "kitab ghar", "maktaba"],
+      "children": [
+        {
+          "id": "library-reading-hall",
+          "name": "Library Reading Hall",
+          "type": "hall",
+          "floor": 1,
+          "source": "placeholder",
+          "aliases": ["reading hall", "reading room", "study hall", "library reading room"],
+          "roman_urdu": ["reading hall mein", "parhai wala hall"]
+        },
+        {
+          "id": "library-first-floor",
+          "name": "Library First Floor",
+          "type": "floor",
+          "floor": 1,
+          "source": "placeholder",
+          "aliases": ["library 1st floor", "library upper floor", "library first floor"],
+          "roman_urdu": ["library upar wali manzil"]
+        }
+      ]
+    },
+    {
+      "id": "cafeteria",
+      "name": "Cafeteria",
+      "type": "building",
+      "owner": "Cafeteria",
+      "source": "placeholder",
+      "aliases": ["canteen", "cafe", "food court", "cafetaria", "cafateria"],
+      "roman_urdu": ["cafeteria mein", "canteen mein", "khane ki jagah"],
+      "children": [
+        {
+          "id": "cafeteria-seating",
+          "name": "Cafeteria Seating Area",
+          "type": "area",
+          "floor": 0,
+          "source": "placeholder",
+          "aliases": ["canteen seating", "cafe seating", "cafeteria seating", "cafeteria seating area"],
+          "roman_urdu": ["canteen mein baithne ki jagah"]
+        }
+      ]
+    },
+    {
+      "id": "main-gate",
+      "name": "Main Gate",
+      "type": "outdoor",
+      "owner": null,
+      "source": "placeholder",
+      "aliases": ["gate 1", "entrance", "main entrance"],
+      "roman_urdu": ["main gate par", "darwaza"],
+      "children": []
+    },
+    {
+      "id": "parking",
+      "name": "Parking Lot",
+      "type": "outdoor",
+      "owner": null,
+      "source": "placeholder",
+      "aliases": ["parking", "car park", "bike stand", "parking area"],
+      "roman_urdu": ["parking mein", "gari khari karne ki jagah"],
+      "children": []
+    }
+  ]
+}

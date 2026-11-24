@@ -1,0 +1,10 @@
+{
+  "_note": "THE ONE PLACE for department codes and names. Every screen, prompt and doc reads the names from here (via src/lib/departments.ts). There is no separate 'Labs' department: every lab belongs to its parent department (EE Lab 1/2 -> EE, SC/DB/Networking Lab -> CSE, IS Lab 1/2 -> IS). 'handles' is a hint for the rule-based fallback and the AI prompt.",
+  "departments": [
+    { "code": "EE", "name": "Electrical Engineering", "handles": ["electrical", "power", "wiring", "sparks", "lighting", "generator", "ups"] },
+    { "code": "CSE", "name": "Computer Software Engineering", "handles": ["projector", "lab computers", "software", "classroom equipment"] },
+    { "code": "IS", "name": "Information Systems", "handles": ["wifi", "network", "internet", "portal", "printers", "accounts"] },
+    { "code": "Library", "name": "Library", "handles": ["books", "reading room", "library ac", "library seating", "library noise"] },
+    { "code": "Cafeteria", "name": "Cafeteria", "handles": ["food", "hygiene", "prices", "water cooler", "seating"] }
+  ]
+}
